@@ -1,0 +1,1 @@
+<img alt="Cash App Pay" src="https://static.afterpaycdn.com/en-US/integration/logo/icon/color.svg" height="24" />
