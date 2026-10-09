@@ -86,3 +86,30 @@
     `LAUNCH-CHECKLIST.md`; removal happens at launch (and if a real endpoint is added,
     the CSP `form-action 'none'` must be revisited).
     Reversal: n/a.
+
+13. **Desktop contact line enlarged to 20px (mobile unchanged)**
+    Context: owner reported the "Call for a consultation" line looked small on full
+    desktop view, then asked for one more step up, desktop-only, nothing else changed.
+    Choice: `@media(min-width:721px){.contact-strip{font-size:20px;padding:13px 15px}}`;
+    mobile stays `font-size:14px;padding:10px 12px`. Applied to `index.html`, the prototype
+    and the embedded review; committed `6ef896d` (`index.html` only) and pushed in `6029dc5`.
+    Reversal: change/remove that single media rule.
+
+14. **Top mobile nav removed from the homepage (reverses "preserve mobile nav")**
+    Context: owner asked to remove the header "Services / Our Approach / Build a Quote
+    Request" that sits above the contact line on `index.html`. This overrides the earlier
+    instruction to preserve the mobile nav.
+    Choice: deleted `<nav class="mobile-nav" aria-label="Navigation">…</nav>` and its dead
+    CSS (base `.mobile-nav{display:none}` + the ≤720px `.mobile-nav{display:flex…}` /
+    `.mobile-nav a{…}` rules). The contact strip is now the first content after the skip
+    link. Applied to `index.html` only; the prototype and embedded review still contain it.
+    Reversal: restore the element + CSS from git history (`6029dc5`).
+    Note: this removes the only on-page mobile section nav — mobile users reach sections by
+    scrolling or the skip link.
+
+15. **`__view-compare.html` (review helper) ended up tracked**
+    Context: a temporary side-by-side mobile/desktop review page was created during the
+    visual pass; the owner's closeout commit `6029dc5` included it.
+    Choice: leave it for now (works as a local preview helper) but flag it for removal
+    before launch — it is not part of the intended site.
+    Reversal: `git rm __view-compare.html`.

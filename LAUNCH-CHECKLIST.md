@@ -1,10 +1,14 @@
 # LAUNCH-CHECKLIST — text to remove / replace before launch
 
-Produced by scanning the live homepage (`index.html`; identical content in
+Produced by scanning the live homepage (`index.html`; shared content in
 `diamond-royalty-contact-payment-prototype.html`). Every item below is deliberate
 placeholder / "preview-only" copy. **Remove or rewrite each one when the business
 launches** — and if a real submission endpoint is connected, see the infrastructure note
 at the end. Search the HTML for the exact quoted strings.
+
+> Note: as of the current working tree the prototype/embedded-review pages still show the
+> top mobile nav ("Services / Our Approach / Build a Quote Request") that was removed from
+> `index.html`; the text strings in this checklist are otherwise shared.
 
 ## 1. Builder disclosure — `#draft-note` (`.note`, above the form)
 - Current: "Local request builder only: this form does not send anything or book an
@@ -63,6 +67,11 @@ at the end. Search the HTML for the exact quoted strings.
 ## 10. `README.md`
 - Current content is just `# diamond-site` / "Diamond Royalty Cleaning Company Website"
   (56 B). Replace with a real readme (or remove) at launch.
+
+## Non-text cleanup before launch
+- **`__view-compare.html`** — temporary mobile/desktop side-by-side review helper. It is
+  currently tracked (committed in `6029dc5`) but is not a site page. Remove it
+  (`git rm __view-compare.html`).
 
 ## Infrastructure to revisit when submitting for real
 - meta CSP is currently `form-action 'none'` — this **blocks all submissions**. Replace

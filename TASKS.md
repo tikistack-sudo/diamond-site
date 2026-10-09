@@ -25,6 +25,23 @@
 - [x] DONE — Local deploy (`127.0.0.1:8765`) + closeout docs.
 - [x] DONE — Owner committed and pushed all site work (`4435b2f` → `63e3d95` → `cee140f`);
   GitHub Pages serving `index.html` as the homepage.
+- [x] DONE — Enlarge the desktop contact line (owner: too small on full desktop view, then
+  one more step up, desktop-only). Proof:
+  `@media(min-width:721px){.contact-strip{font-size:20px;padding:13px 15px}}` (mobile stays
+  `14px`); verified desktop 1000px = 20px, mobile 390px = 14px, no overflow; committed
+  `6ef896d` (`index.html`) and pushed in `6029dc5`.
+- [x] DONE — Remove the top mobile nav ("Services / Our Approach / Build a Quote Request")
+  above the contact line on `index.html` (owner request; reverses the earlier "preserve
+  mobile nav" rule). Proof: `.mobile-nav` occurrences = 0; contact strip is the first
+  content after the skip link; verified in-browser at desktop 1000px and mobile 390px
+  (no nav, no overflow, desktop rule intact). **Uncommitted** (`index.html`, 18,089 B).
+- [x] DONE — Docs closeout via handoff skill (this update).
+- [ ] OPEN — Commit/push the `index.html` mobile-nav removal (local, uncommitted; owner pushes).
+- [ ] OPEN — Sync the mobile-nav removal to `diamond-royalty-contact-payment-prototype.html`
+  and `diamond-royalty-contact-payment-embedded-review.html` (they still contain it) if the
+  pages should stay aligned.
+- [ ] OPEN — Remove the stray tracked helper `__view-compare.html` (side-by-side review page
+  committed in `6029dc5`; not a site page) before launch.
 - [ ] OPEN — Launch-time text removal/replacement: see `LAUNCH-CHECKLIST.md`.
 - [ ] OPEN — Owner confirmations: consultation phone use, payment acceptance,
   Cash App Pay product, Zelle permission and attribution.
