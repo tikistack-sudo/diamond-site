@@ -6,21 +6,29 @@
 - [x] DONE — 9 WebP candidates (c1/c2/c3 × q80/85/90) + comparison gallery.
   Proof: measured bytes, PSNR, halo/banding metrics; gallery archived intact at
   `archive/webp-gallery/`. Model visual inspection not possible — flagged.
-- [x] DONE — Swap default `c1-original-q85.webp` into the entry HTML + approved
-  enabling fix for the pre-existing `.join('\n')` SyntaxError.
-  Proof: focused diff (3 hunks; 1,205,977 → 16,472 B), browser tests (image 200,
-  aspect preserved, hotspots aligned, full quote flow, no query leak).
-- [x] DONE — Harden request builder (CSP / disabled-until-init / `<noscript>`) in
-  both HTML files. Proof: focused diff (4 hunks per file), test matrix PASS for
-  normal and failure modes, Enter-key and button clicks, control probes
-  (no-CSP control leaked `?name=…` as expected; CSP variants blocked with
-  logged violations, URL clean, zero form-data requests).
-- [x] DONE — Archive unnecessary files so only intended pages render.
-  Proof: root listing after move (two HTMLs + README + `webp-candidates/`
-  containing only the required WebP); `archive/` inventory below.
+- [x] DONE — Swap default WebP into the entry HTML + approved enabling fix for the
+  pre-existing `.join('\n')` SyntaxError.
+- [x] DONE — Harden request builder (CSP / disabled-until-init / `<noscript>`) in both
+  original HTML files. Proof: test matrix PASS for normal and failure modes; control
+  probes (no-CSP control leaked `?name=…`; CSP blocked it, URL clean, zero form-data).
+- [x] DONE — Archive unnecessary files so only the intended pages render.
+- [x] DONE — Contact + payment prototype (2 HTML files + official Apple Pay mark).
+  Proof: focused 3-addition diff (scoped CSS, contact strip, footer payment row);
+  browser tests PASS (exact `tel:` href, strip not overlapping artwork, row items,
+  contrast, details by keyboard + pointer, 390px no overflow, hotspots unchanged,
+  console clean).
+- [x] DONE — Integrate contact/payment into `index.html`.
+  Proof: `index.html` byte-identical to the prototype; round-trip diff = previous homepage.
+- [x] DONE — Convert the owner-supplied JPG → WebP and update it where relevant.
+  Proof: `c1-original-q85.webp` 1080×1350, 182,900 B, served `200 image/webp`; all three
+  pages report natural 1080×1350; hotspot geometry unchanged.
+- [x] DONE — Local deploy (`127.0.0.1:8765`) + closeout docs.
+- [x] DONE — Owner committed and pushed all site work (`4435b2f` → `63e3d95` → `cee140f`);
+  GitHub Pages serving `index.html` as the homepage.
+- [ ] OPEN — Launch-time text removal/replacement: see `LAUNCH-CHECKLIST.md`.
+- [ ] OPEN — Owner confirmations: consultation phone use, payment acceptance,
+  Cash App Pay product, Zelle permission and attribution.
 - [ ] OPEN — Client manual checks: visual alignment, downloaded draft contents,
-  true JavaScript-disabled behavior + `<noscript>` rendering, primary clipboard
-  access. (State files: not machine-verifiable in this environment.)
-- [x] DONE — Closeout handoff written (`handoffs/latest.md`).
-- [ ] OPEN — Commit scope decision. Approval pending; nothing committed;
-  no `.gitignore` (declined).
+  true JS-disabled behavior + `<noscript>` rendering, primary clipboard access.
+- [ ] OPEN — If a real submission endpoint is connected: revisit CSP `form-action 'none'`
+  and rewrite the "draft / not sent" copy.

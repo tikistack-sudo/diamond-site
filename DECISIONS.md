@@ -37,3 +37,52 @@
 
 6. **Nothing committed / no deploy / no backend** — approval boundary held across
    all tasks; site files remain untracked by design pending user decision.
+   STATUS UPDATE: superseded — the owner later committed and pushed the site
+   (see 11).
+
+7. **Owner-supplied files take precedence over the task prompt**
+   Context: owner uploaded `Apple_Pay_Mark_RGB_041619.svg`,
+   `Method-Recommendedtreatment.csv`, and `cash-app-ref.txt`, stating the uploads are
+   superior to the second prompt.
+   Choice: use the supplied official Apple Pay mark locally (supersedes the prompt's
+   "download it" step); treat the CSV as the controlling recommendation (Apple official
+   mark; no "Cash App Pay" branding without product confirmation; Zelle® plain text).
+   Reversal: swap assets/copy.
+
+8. **Cash App mark = the ref supplied in `cash-app-ref.txt`, used verbatim**
+   Context: the ref file was updated three times (colored icon → mono-white lockup →
+   colored icon). Maintaining a local copy fought the owner's intent.
+   Choice (final): `<img alt="Cash App Pay"
+   src="https://static.afterpaycdn.com/en-US/integration/logo/icon/color.svg" height="24">`,
+   hotlinked to Afterpay's CDN. This contradicts the CSV's "no Cash App Pay branding"
+   caution and the earlier no-hotlink rule; accepted per the owner's explicit instruction.
+   Reversal: localize the asset and/or change `alt` to "Cash App".
+
+9. **Contact + payment integrated into `index.html`**
+   Context: the owner asked to integrate the prototype changes into the homepage.
+   Choice: made `index.html` byte-identical to
+   `diamond-royalty-contact-payment-prototype.html`; old homepage backed up at
+   `/tmp/opencode/index.pre-integrate.html`; round-trip proven (only the 3 additions differ).
+   Reversal: restore the backup / revert the commit.
+
+10. **Artwork = WebP converted from the owner-supplied JPG (no upscaling)**
+    Context: the owner supplied `c1-original-q85.jpg` (1080×1350) and asked to use a
+    WebP made from it.
+    Choice: convert at q85 → `webp-candidates/c1-original-q85.webp`, 1080×1350,
+    182,900 B; replaced the earlier upscaled 1122×1402 (218,700 B); `width`/`height`
+    updated where relevant (index, prototype, embedded review). The older preview files
+    were left untouched (they share the asset path, so they render the new image).
+    Reversal: restore `/tmp/opencode/c1-original-q85.old.webp`.
+
+11. **Deploy = local server + owner-driven push**
+    Context: the owner asked to deploy; agent `git push` is denied by environment policy.
+    Choice: serve locally (`127.0.0.1:8765`); the owner committed and pushed
+    (`4435b2f` → `63e3d95` → `cee140f`). No agent commit/push.
+    Reversal: n/a.
+
+12. **Launch-time text cataloged, not removed yet**
+    Context: the page intentionally still carries placeholder / "preview-only" copy.
+    Choice: keep it for review and catalog every string to remove/replace in
+    `LAUNCH-CHECKLIST.md`; removal happens at launch (and if a real endpoint is added,
+    the CSP `form-action 'none'` must be revisited).
+    Reversal: n/a.

@@ -1,0 +1,41 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Responsive comparison — Diamond Royalty</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin:0; background:#0b0b0f; color:#e9e9ef; font:14px Arial,sans-serif; }
+  .bar { position:sticky; top:0; z-index:5; background:#15151c; padding:10px 14px;
+         border-bottom:1px solid #333; font-weight:bold; }
+  .bar span { color:#9aa; font-weight:normal; }
+  .row { display:flex; gap:18px; align-items:flex-start; padding:16px; }
+  .panel { background:#15151c; border:1px solid #3a3a44; border-radius:8px; overflow:hidden; flex:0 0 auto; }
+  .label { padding:8px 12px; font-weight:bold; border-bottom:1px solid #333; background:#1b1b24; }
+  iframe { border:0; display:block; background:#10031d; }
+  .mobile iframe { width:390px; }
+  .desktop .scale { width:550px; overflow:hidden; }
+  .desktop iframe { width:1000px; transform:scale(.55); transform-origin:top left; }
+</style>
+<div class="bar">Mobile 390px &nbsp;⬅️&nbsp; | &nbsp;➡️&nbsp; Desktop 1000px <span>(shown at 0.55×)</span></div>
+<div class="row">
+  <div class="panel mobile">
+    <div class="label">Mobile — 390px</div>
+    <iframe id="m" src="index.html" title="Mobile 390px view"></iframe>
+  </div>
+  <div class="panel desktop">
+    <div class="label">Desktop — 1000px</div>
+    <div class="scale"><iframe id="d" src="index.html" title="Desktop 1000px view"></iframe></div>
+  </div>
+</div>
+<script>
+  function fit(frame, wrapper) {
+    try {
+      const h = frame.contentDocument.documentElement.scrollHeight;
+      if (wrapper) { wrapper.style.height = Math.round(h * 0.55) + 'px'; }
+      else { frame.style.height = h + 'px'; }
+    } catch (e) { frame.style.height = '4000px'; }
+  }
+  const m = document.getElementById('m');
+  const d = document.getElementById('d');
+  m.addEventListener('load', () => setTimeout(() => { fit(m); }, 800));
+  d.addEventListener('load', () => setTimeout(() => { fit(d, d.parentElement); }, 800));
+</script>

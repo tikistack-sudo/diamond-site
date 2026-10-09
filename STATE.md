@@ -1,30 +1,46 @@
 # STATE — diamond-site
 
 ## Milestone
-WebP swap and request-builder hardening are complete and accepted for local/client
-review. Leftover dev artifacts are archived so only the two intended pages render
-from the repo root. No deploy, no commits.
+The contact + payment prototype is integrated into the homepage; all work is committed
+and pushed and GitHub Pages serves `index.html` at the site root. Remaining work is
+launch-time copy cleanup and owner confirmations. No backend/submission integration.
 
-## Verified facts (proof: diffs + test matrix in DECISIONS.md / handoffs/latest.md)
-- External preview: `diamond-royalty-functional-preview.html` (16,807 B); required
-  dependency `webp-candidates/c1-original-q85.webp` (WebP/RGB, 1122×1402, 218,700 B).
-- Client review copy: `diamond-royalty-functional-preview-embedded-review.html`
-  (308,394 B, WebP inlined; zero external dependencies).
-- Hardening in both files: early-head CSP `form-action 'none'` (no prior CSP existed;
-  meta delivery confirmed enforced by probe), submit button `disabled` in HTML and
-  enabled only after all JS handlers register, readable `<noscript>` notice.
-- Pre-existing `.join('\n')` literal-newline SyntaxError fixed as an approved
-  enabling change (all page JS was dead before it).
-- Test matrix PASS: normal JS flow (draft by button and Enter key, copy fallback,
-  download, service preselection, clear), no-JS proxy, forced init failure — in both
-  failure cases no form values entered the URL and no form-data request left the
-  page; control probes prove the native path exists and meta `form-action` blocks it.
-- `generated-image.png` untouched (source preserved); no HTML/design/hotspot/copy
-  changes beyond the recorded hunks.
-- Requests are not sent and appointments are not booked — page states this and CSP
-  blocks native submission.
+## Current site (verified in-browser and by checksum)
+- Homepage `index.html` is byte-identical to
+  `diamond-royalty-contact-payment-prototype.html` (sha256 `faa97478…`, 18,436 B).
+- Top contact strip above the artwork: `tel:+19172703611`, text
+  "Call for a consultation · (917) 270-3611" (14px, ~13.7:1 contrast, keyboard reachable,
+  does not overlap the artwork).
+- Footer payment row (replaces the old "No verified contact…" sentence):
+  Cash App mark · Zelle® · Apple Pay mark · collapsed "Payment details" disclosure
+  (Checks and cash accepted / Cash App: $HMHR25 / Zelle: (917) 270-3611 / Apple Pay accepted).
+- Artwork: `webp-candidates/c1-original-q85.webp`, 1080×1350, 182,900 B — converted at q85
+  from the owner-supplied `c1-original-q85.jpg` (1080×1350). Replaces the earlier
+  upscaled 1122×1402 webp (218,700 B); no upscaling ships. `width`/`height` updated to
+  1080×1350 in `index.html`, the prototype and the embedded review copy.
+- Hardening retained: meta CSP `form-action 'none'`, submit button disabled until JS
+  init, `<noscript>` notice.
+- Self-contained review copy regenerated (webp + Apple SVG as data URIs, 270,746 B).
+- Requests are not sent and appointments are not booked (verified: no query-string leak,
+  no form-data requests).
 
-## Repo
-- Branch `main`, single commit `4ba9af4` (README only). All site files untracked;
-  nothing committed; no `.gitignore` (declined earlier by user).
-- No local server running.
+## Repo / deploy
+- Branch `main` == `origin/main` @ `cee140f`; working tree clean.
+  (Commit labels include "commercial and residentail cleaning update", but no
+  commercial/residential content exists in the page yet — grep = none.)
+- GitHub Pages: legacy build, `main` /, live at https://tikistack-sudo.github.io/diamond-site/
+- Local server running: `python3 -m http.server 8765 --bind 127.0.0.1`
+  (pid in `/tmp/opencode/http.pid`, log `/tmp/opencode/http-serve.log`).
+- Agent `git push` is denied by environment policy — the owner commits and pushes.
+
+## Launch-time text — see `LAUNCH-CHECKLIST.md`
+The page still carries deliberate placeholder / "preview-only" copy that MUST be removed
+or rewritten at launch: the builder disclosure (`#draft-note`), the `<noscript>` notice,
+the footer "Design and functionality preview" suffix, the "Not Sent" headings/status
+messages, draft-scope hints, FAQ answers, and the README stub.
+
+## Open owner confirmations
+- Consultation phone (917) 270-3611 was supplied as the Zelle recipient — provisional.
+- Actual payment acceptance (checks, cash, Cash App $HMHR25, Zelle, Apple Pay).
+- Cash App Pay merchant product (page uses the Cash App ref the owner supplied verbatim).
+- Zelle logo permission and attribution/disclaimer requirements.
