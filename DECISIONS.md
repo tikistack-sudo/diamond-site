@@ -1,5 +1,36 @@
 # DECISIONS
 
+16. **Architecture pivot: Cloudflare Pages → existing Worker (`diamond-site`) serves site + API**
+    Context: Milestone 1 (site live on the domain) was delivered by the owner as a
+    **Cloudflare Worker with static assets** (uploaded from repo HEAD `b893349`, no script,
+    no bindings) — not a Pages project, and this account has no Pages projects. Pages
+    Functions (`functions/`) would never execute, and Workers custom domains intercept the
+    whole hostname, so a second Worker/route for `/api/booking` could not share the
+    hostname without CORS.
+    Choice: one module Worker (`worker.js`) imports the site assets (`index.html`,
+    Apple Pay SVG, hero WebP) as Text/Data modules and serves `/api/booking` same-origin
+    (POST→handler, GET→405, 404 fallback). Deployed via REST `PUT
+    /accounts/{acct}/workers/scripts/diamond-site` with bindings `DB` (D1 `bookings`
+    d84a3ce1-3055-4a96-8638-0e485fade614), `RESEND_API_KEY` (secret_text),
+    `BOOKING_NOTIFY_EMAIL` = tyrikn2@gmail.com,diamondroyaltyny@gmail.com (plain_text).
+    `wrangler.jsonc` added so `npx wrangler deploy` from the repo root reproduces the
+    deployment; `functions/` (Pages Function variant) removed as superseded before it was
+    ever committed. REST multipart gotcha: a module part with a slashed name (e.g.
+    `webp-candidates/c1-original-q85.webp`) needs an explicit `;filename=` or CF reports
+    "No such module". Verified live: new HTML served, assets 200 with correct types,
+    POST /api/booking → 201 + D1 row #1, invalid ZIP → 400.
+    Reversal: `git revert` + redeploy; or restore the assets-only upload from the
+    dashboard's deploy history.
+
+17. **www fixed by attaching it as a Workers custom domain (supersedes the Pages-domain plan)**
+    Context: `www` was a proxied CNAME → apex while only the apex hostname was a Worker
+    custom domain → host rejected → HTTP 522.
+    Choice: deleted the CNAME (was `CNAME www → diamondroyaltycleaningco.com`, proxied,
+    id `9516d14f4b36e50093010893887869a2`) and attached
+    `www.diamondroyaltycleaningco.com` to the `diamond-site` Worker via
+    `PUT /accounts/{acct}/workers/domains`. Verified: HTTP 200.
+    Reversal: remove the Workers domain + recreate the CNAME.
+
 1. **WebP default = `c1-original-q85.webp`**
    Context: 2.3 MB source must ship as WebP; 9 candidates measured (bytes, PSNR,
    halo/overshoot, banding); no model vision available for subjective pass.

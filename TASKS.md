@@ -49,3 +49,33 @@
   true JS-disabled behavior + `<noscript>` rendering, primary clipboard access.
 - [ ] OPEN — If a real submission endpoint is connected: revisit CSP `form-action 'none'`
   and rewrite the "draft / not sent" copy.
+- [x] DONE — RUNBOOK.md created (launch runbook: Cloudflare Pages + D1 + Resend; owner
+  steps separated from cheap-model tasks T1–T7 with full prompts). Proof: 7 tasks ×
+  9 mandatory sections, architecture + cost table, rollback notes.
+- [x] DONE — Milestone 1 (human verified): site live at diamondroyaltycleaningco.com.
+  Proof: agent curl → HTTP 200, valid TLS; ⚠️ www variant returns 522 (open).
+- [x] DONE — T1: `schema.sql` (D1 bookings table + 2 indexes). Proof: file matches
+  prompt exactly; untracked only.
+- [x] DONE — T2: `functions/api/booking.js` (validate → D1 insert → 2 Resend emails;
+  honeypot; 400/413/500/405). Proof: `node --check` pass (ESM via .mjs copy); grep
+  counts 1/1.
+- [x] DONE — T3: form rewired (phone field + required name/email, honeypot, result
+  receipt, "Send My Request", script replaced). Proof: 8 anchors ×1, all greps green,
+  inline JS `node --check` pass, in-browser: submit enabled, honeypot hidden, console
+  clean, screenshot verified.
+- [x] DONE — T4: CSP → `form-action 'self'; connect-src 'self'`. Proof: grep counts 0/1.
+- [x] DONE — T5: launch copy rewritten (draft-note, noscript, footer, ack, 3 FAQ
+  answers). Proof: all old strings 0, new strings 1, §7 hint untouched.
+- [x] DONE — T6: dev-only pages archived (`git mv`×4 — 2 beyond original scope, flagged
+  in RUNBOOK; `git rm __view-compare.html`). Proof: `ls *.html` → only `index.html`.
+- [x] DONE — T7: real README. Proof: 1,605 B, references RUNBOOK.md.
+- [x] DONE — MILESTONE 3 executed by agent via REST (pivot: site is a Worker, not
+  Pages): D1 `bookings` created + schema applied (verified table+indexes); Resend domain
+  added + 4 DNS records created in zone; `www` attached as Workers custom domain
+  (522 → 200); bindings DB/RESEND_API_KEY/BOOKING_NOTIFY_EMAIL (both CEO emails) set on
+  the `diamond-site` Worker. Proof: DECISIONS #16–17, STATE.md evidence block.
+- [x] DONE — Architecture pivot: `worker.js` (site + API in one Worker) replaces
+  `functions/`; `wrangler.jsonc` added. Proof: live POST → 201 + D1 row #1; invalid
+  ZIP → 400; new copy + assets served 200; www 200.
+- [ ] OPEN — Owner: check CEO inboxes for the test notification; owner commit + push;
+  revoke the Cloudflare API token; disable the stale GitHub Pages copy.

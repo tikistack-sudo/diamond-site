@@ -1,0 +1,24 @@
+// Wrangler configuration for the diamond-site Worker (static site + booking API).
+// Deploy from the repo root with:  npx wrangler deploy
+// RESEND_API_KEY is a secret and must NOT live in this file. Set it with:
+//   npx wrangler secret put RESEND_API_KEY
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "diamond-site",
+  "main": "worker.js",
+  "compatibility_date": "2026-10-06",
+  "rules": [
+    { "type": "Text", "include": ["**/*.html", "**/*.svg"] },
+    { "type": "Data", "include": ["**/*.webp"] }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "bookings",
+      "database_id": "d84a3ce1-3055-4a96-8638-0e485fade614"
+    }
+  ],
+  "vars": {
+    "BOOKING_NOTIFY_EMAIL": "tyrikn2@gmail.com,diamondroyaltyny@gmail.com"
+  }
+}

@@ -1,59 +1,61 @@
 # STATE — diamond-site
 
 ## Milestone
-The contact + payment homepage is live on GitHub Pages. Two owner refinements landed on
-top of it: the desktop contact line was enlarged (committed + pushed), and the top mobile
-nav ("Services / Our Approach / Build a Quote Request") was removed from `index.html`
-(done locally, **not yet committed**). Remaining work: commit/push the nav removal,
-optionally sync it to the prototype/review pages, launch-time copy cleanup, and owner
-confirmations. No backend/submission integration.
+**LAUNCH ESSENTIALLY COMPLETE (Oct 11 2026).** The site is live at
+https://diamondroyaltycleaningco.com AND www (HTTP 200; the old 522 is fixed). The
+booking form posts to the same origin: the `diamond-site` **Worker** validates, stores
+each request in D1 `bookings`, and emails both CEO addresses (tyrikn2@gmail.com,
+diamondroyaltyny@gmail.com) plus a customer "received/under review" email — via Resend.
+Verified live by the agent: POST → 201 + D1 row #1; invalid ZIP → 400. Remaining:
+owner inbox check of the two test emails (or a fresh test after Resend verification
+completes), owner commit + push (agent push denied by policy), and revoking the
+temporary Cloudflare API token used for setup.
 
-## Current site (verified in-browser)
-- Contact strip: `tel:+19172703611`, text "Call for a consultation · (917) 270-3611".
-  Desktop (>720px) **20px** with padding `13px 15px`; mobile (≤720px) **14px** with padding
-  `10px 12px`. No horizontal overflow at 390px. Rule:
-  `@media(min-width:721px){.contact-strip{font-size:20px;padding:13px 15px}}`.
-- Top mobile nav **removed from `index.html`**: the `<nav class="mobile-nav">` element and
-  its dead `.mobile-nav` CSS (base `display:none` + the ≤720px rules) were deleted. The
-  contact strip is now the first content after the "Skip artwork…" link. (Desktop already
-  hid the nav, so this is a mobile-facing change; mobile users reach sections by scrolling
-  or the skip link.)
-- Footer payment row (unchanged; replaces the old "No verified contact…" sentence):
-  Cash App mark · Zelle® · Apple Pay mark · collapsed "Payment details" disclosure
-  (Checks and cash accepted / Cash App: $HMHR25 / Zelle: (917) 270-3611 / Apple Pay accepted).
-- Artwork: `webp-candidates/c1-original-q85.webp`, 1080×1350, 182,900 B — converted at q85
-  from the owner-supplied `c1-original-q85.jpg` (1080×1350); no upscaling ships.
-  `width`/`height` are 1080×1350 in `index.html`, the prototype and the embedded review.
-- **Divergence:** `index.html` is **no longer byte-identical** to the prototype. Working-tree
-  `index.html` = 18,089 B; prototype = 18,495 B; embedded review = 270,819 B. The prototype
-  and embedded review still contain the mobile nav (and share the 20px contact rule).
-- Hardening retained: meta CSP `form-action 'none'`, submit button disabled until JS init,
-  `<noscript>` notice.
-- Requests are not sent and appointments are not booked (verified: no query-string leak,
-  no form-data requests).
+## Architecture (PIVOTED — see DECISIONS #16–17)
+- NOT Cloudflare Pages (this account has none). The site is the `diamond-site`
+  **Worker**: static assets imported as modules + same-origin `/api/booking` handler.
+- `worker.js` = site + API in one module Worker (validate → D1 insert → 2 Resend
+  emails; honeypot drop; 400/413/500 guards; 405 non-POST; 404 fallback; cache headers).
+- `wrangler.jsonc` reproduces the deployment (`npx wrangler deploy`); RESEND_API_KEY is
+  a Worker secret, set via API and documented as `npx wrangler secret put RESEND_API_KEY`.
+- D1 `bookings` d84a3ce1-3055-4a96-8638-0e485fade614, schema from `schema.sql`
+  (verified: table + 2 indexes). Existing `rocca-waitlist` DB untouched.
+- Resend: domain `diamondroyaltycleaningco.com` added (id c5c407f6-…), 4 DNS records
+  created in the zone (DKIM resend._domainkey; MX+SPF on send; CNAME rsend — DNS-only).
+  Coexists with Cloudflare Email Routing (receiving) — no record conflicts.
+- Custom domains on the Worker: apex (pre-existing) + www (attached by agent;
+  broken CNAME deleted, rollback noted in DECISIONS #17).
+- `functions/` (Pages Function variant) deleted BEFORE any commit — superseded.
+
+## Verification evidence (agent, Oct 11)
+- Live markers: `id="phone"` 1, `Send My Request` 1, `Request Received` 1,
+  `connect-src 'self'` 1, `Draft — Not Sent` 0; webp/svg 200 correct types; unknown
+  path 404; GET /api/booking 405.
+- POST valid → HTTP 201 `{ok:true,id:1,…}`; D1 row: id 1, Jane Tester test data,
+  status "new". Invalid zip → 400 "A 5-digit ZIP code is required."
+- www → HTTP 200 after Workers-domain attach.
 
 ## Repo / deploy
-- Branch `main` == `origin/main` @ `6029dc5` ("updates on handoff and prototype files");
-  preceding `6ef896d` ("enlarge desktop contact consultation line"). Both pushed.
-  (Commit labels include "commercial and residentail cleaning update", but no
-  commercial/residential content exists in the page yet — grep = none.)
-- Working tree: only `index.html` modified (mobile-nav removal), **uncommitted**.
-- GitHub Pages: legacy build, `main` /, live at https://tikistack-sudo.github.io/diamond-site/
-  — currently serving the committed version (18,495 B, still has the nav).
-- Local server running: `python3 -m http.server 8765 --bind 127.0.0.1`
-  (pid in `/tmp/opencode/http.pid`, log `/tmp/opencode/http-serve.log`).
-- Agent `git push` is denied by environment policy — the owner commits and pushes.
-- Stray tracked helper: `__view-compare.html` (mobile/desktop side-by-side review page) was
-  committed in `6029dc5`; it is a dev helper, not a site page — remove before launch.
+- Deploy path now: REST `PUT workers/scripts/diamond-site` (done) or
+  `npx wrangler deploy` from repo root. Custom domains persist across deploys.
+- Repo: `main` == `origin/main` @ `b893349` + local working tree with the launch changes
+  (index.html, worker.js, wrangler.jsonc, schema.sql, RUNBOOK/STATE/TASKS/README/
+  DECISIONS, 4 archive moves, `__view-compare.html` deleted). **Owner must commit + push**
+  so the repo matches production.
+- Old GitHub Pages copy (tikistack-sudo.github.io/diamond-site/) is stale + harmless;
+  disable at leisure.
+- The pre-launch "preview-only" copy is gone (LAUNCH-CHECKLIST §1–6, §9 done; §7 scope
+  hint left pending owner confirmation).
 
-## Launch-time text — see `LAUNCH-CHECKLIST.md`
-The page still carries deliberate placeholder / "preview-only" copy that MUST be removed
-or rewritten at launch: the builder disclosure (`#draft-note`), the `<noscript>` notice,
-the footer "Design and functionality preview" suffix, the "Not Sent" headings/status
-messages, draft-scope hints, FAQ answers, and the README stub.
-
-## Open owner confirmations
-- Consultation phone (917) 270-3611 was supplied as the Zelle recipient — provisional.
-- Actual payment acceptance (checks, cash, Cash App $HMHR25, Zelle, Apple Pay).
-- Cash App Pay merchant product (page uses the Cash App ref the owner supplied verbatim).
-- Zelle logo permission and attribution/disclaimer requirements.
+## Open items
+1. **Owner: check CEO inboxes** for "New booking request — Deep cleaning — ZIP 10001"
+   (test row #1) — machine-side `owner_emailed` was false pending Resend verification;
+   re-run a test after verification or just watch the next real booking.
+2. **Owner: commit + push** (suggested: "launch booking pipeline (Worker + D1 + Resend);
+   launch copy; docs").
+3. **Owner: revoke the Cloudflare API token** used for setup (minimum-privilege
+   hygiene) — and delete /tmp/opencode/creds.env.
+4. Resend domain verification completing (agent polling in background).
+5. LAUNCH-CHECKLIST §7 scope hint + footer nav label "Request Builder" — owner confirm.
+6. Future hardening: rate limiting/Turnstile, prune webp-candidates to the shipped file,
+   remove `crimson-bar-1917`/`empty-wind-b8e3` leftover Worker scripts (owner choice).
