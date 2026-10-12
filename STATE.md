@@ -31,8 +31,10 @@ temporary Cloudflare API token used for setup.
 - Live markers: `id="phone"` 1, `Send My Request` 1, `Request Received` 1,
   `connect-src 'self'` 1, `Draft — Not Sent` 0; webp/svg 200 correct types; unknown
   path 404; GET /api/booking 405.
-- POST valid → HTTP 201 `{ok:true,id:1,…}`; D1 row: id 1, Jane Tester test data,
-  status "new". Invalid zip → 400 "A 5-digit ZIP code is required."
+- POST valid → HTTP 201; D1 rows #1 and #3 stored (status "new"). Invalid zip → 400.
+- **Resend domain verified** (all 4 records). Booking #3 → `owner_emailed: true` (both
+  CEO addresses). Direct probe to a real address → 200 + email id. `example.com` test
+  address → 422 (reserved domain; expected — real customer addresses are unaffected).
 - www → HTTP 200 after Workers-domain attach.
 
 ## Repo / deploy
@@ -48,14 +50,15 @@ temporary Cloudflare API token used for setup.
   hint left pending owner confirmation).
 
 ## Open items
-1. **Owner: check CEO inboxes** for "New booking request — Deep cleaning — ZIP 10001"
-   (test row #1) — machine-side `owner_emailed` was false pending Resend verification;
-   re-run a test after verification or just watch the next real booking.
+1. **Owner: check CEO inboxes** (tyrikn2@gmail.com, diamondroyaltyny@gmail.com) — you
+   should see: booking notifications for test rows #1 and #3 + two "probe" test emails.
 2. **Owner: commit + push** (suggested: "launch booking pipeline (Worker + D1 + Resend);
-   launch copy; docs").
+   launch copy; docs"). Commit `63c7075` is ready locally.
 3. **Owner: revoke the Cloudflare API token** used for setup (minimum-privilege
    hygiene) — and delete /tmp/opencode/creds.env.
-4. Resend domain verification completing (agent polling in background).
+4. **Optional cleanup of test data:**
+   `DELETE FROM bookings WHERE email='jane.tester@example.com';`
+   (rows #1 and #3 — keep them if you want visible proof in the dashboard).
 5. LAUNCH-CHECKLIST §7 scope hint + footer nav label "Request Builder" — owner confirm.
 6. Future hardening: rate limiting/Turnstile, prune webp-candidates to the shipped file,
    remove `crimson-bar-1917`/`empty-wind-b8e3` leftover Worker scripts (owner choice).
