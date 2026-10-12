@@ -36,19 +36,39 @@
   content after the skip link; verified in-browser at desktop 1000px and mobile 390px
   (no nav, no overflow, desktop rule intact). **Uncommitted** (`index.html`, 18,089 B).
 - [x] DONE — Docs closeout via handoff skill (this update).
-- [ ] OPEN — Commit/push the `index.html` mobile-nav removal (local, uncommitted; owner pushes).
-- [ ] OPEN — Sync the mobile-nav removal to `diamond-royalty-contact-payment-prototype.html`
-  and `diamond-royalty-contact-payment-embedded-review.html` (they still contain it) if the
-  pages should stay aligned.
-- [ ] OPEN — Remove the stray tracked helper `__view-compare.html` (side-by-side review page
-  committed in `6029dc5`; not a site page) before launch.
-- [ ] OPEN — Launch-time text removal/replacement: see `LAUNCH-CHECKLIST.md`.
-- [ ] OPEN — Owner confirmations: consultation phone use, payment acceptance,
-  Cash App Pay product, Zelle permission and attribution.
-- [ ] OPEN — Client manual checks: visual alignment, downloaded draft contents,
-  true JS-disabled behavior + `<noscript>` rendering, primary clipboard access.
-- [ ] OPEN — If a real submission endpoint is connected: revisit CSP `form-action 'none'`
-  and rewrite the "draft / not sent" copy.
+- [x] DONE — Commit/push the `index.html` mobile-nav removal. Proof: owner commit
+  `b893349` is `origin/main`.
+- [x] DONE — Sync the mobile-nav removal to the prototype/review pages. Superseded: those
+  pages were archived in T6 (see below), so the repo root serves only `index.html`.
+- [x] DONE — Remove the stray tracked helper `__view-compare.html`. Proof: `git rm` in T6;
+  commit `63c7075`.
+- [x] DONE — Launch-time text removal/replacement (`LAUNCH-CHECKLIST.md`): §1–6 and §9
+  rewritten (T3 result block + T5 copy edits); §8 draft-sharing hint removed with the
+  result block; §10 README rewritten (T7). Deliberately NOT touched: §7 scope hint
+  (business claims pending owner confirmation).
+- [x] DONE — Revisit CSP for the real submission endpoint. Proof: `form-action 'self';
+  connect-src 'self'` (T4); same-origin POST verified live.
+- [x] DONE — Client manual checks, original scope. Superseded: the draft/copy/download
+  feature was removed; the form now submits for real. Replaced by live-site checks
+  below.
+- [x] DONE — Final end-to-end verification (Resend verified Oct 11). Proof: booking #3 →
+  201 + `owner_emailed: true` (both CEO addresses); real-address probe → 200 + email id;
+  `example.com` 422 = reserved-domain rule, not a bug; D1 rows #1/#3 stored; www → 200.
+- [x] DONE — Owner confirmed the pipeline works ("everything works great", Oct 11 —
+  covers site, bookings, and CEO emails).
+- [ ] OPEN — Owner: `git push origin main` (launch commits `63c7075` + `91fff40` are
+  local only; `origin/main` still `b893349`).
+- [ ] OPEN — Owner: revoke the Cloudflare API token (My Profile → API Tokens) and delete
+  `/tmp/opencode/creds.env` (still present as of handoff).
+- [ ] OPEN — Owner: optional — disable the stale GitHub Pages copy
+  (`tikistack-sudo.github.io/diamond-site/`); delete test rows
+  (`DELETE FROM bookings WHERE email='jane.tester@example.com';`).
+- [ ] OPEN — One human pass on the LIVE site: mobile (~390px) visual alignment of the new
+  form + Request Received receipt; then watch the first real booking end-to-end.
+- [ ] OPEN — Owner confirmations still pending (unaffected by launch): consultation
+  phone use as Zelle recipient, payment acceptance facts, Cash App Pay product, Zelle
+  permission/attribution, LAUNCH-CHECKLIST §7 scope hint wording, footer nav label
+  "Request Builder".
 - [x] DONE — RUNBOOK.md created (launch runbook: Cloudflare Pages + D1 + Resend; owner
   steps separated from cheap-model tasks T1–T7 with full prompts). Proof: 7 tasks ×
   9 mandatory sections, architecture + cost table, rollback notes.
@@ -77,5 +97,7 @@
 - [x] DONE — Architecture pivot: `worker.js` (site + API in one Worker) replaces
   `functions/`; `wrangler.jsonc` added. Proof: live POST → 201 + D1 row #1; invalid
   ZIP → 400; new copy + assets served 200; www 200.
-- [ ] OPEN — Owner: check CEO inboxes for the test notification; owner commit + push;
-  revoke the Cloudflare API token; disable the stale GitHub Pages copy.
+- [x] DONE — Resend domain verified (all 4 records); final E2E proof: booking #3 →
+  `owner_emailed: true`; real-address probe → 200 + email id. Owner confirmed the
+  pipeline works. Proof: RUNBOOK Milestone 5 status box; STATE.md evidence block.
+- [x] DONE — Docs closeout via handoff skill (this update).

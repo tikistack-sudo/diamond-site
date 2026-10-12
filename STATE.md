@@ -50,15 +50,15 @@ temporary Cloudflare API token used for setup.
   hint left pending owner confirmation).
 
 ## Open items
-1. **Owner: check CEO inboxes** (tyrikn2@gmail.com, diamondroyaltyny@gmail.com) — you
-   should see: booking notifications for test rows #1 and #3 + two "probe" test emails.
-2. **Owner: commit + push** (suggested: "launch booking pipeline (Worker + D1 + Resend);
-   launch copy; docs"). Commit `63c7075` is ready locally.
-3. **Owner: revoke the Cloudflare API token** used for setup (minimum-privilege
-   hygiene) — and delete /tmp/opencode/creds.env.
-4. **Optional cleanup of test data:**
-   `DELETE FROM bookings WHERE email='jane.tester@example.com';`
-   (rows #1 and #3 — keep them if you want visible proof in the dashboard).
+1. **Owner: `git push origin main`** — launch commits `63c7075` + `91fff40` are local
+   only; `origin/main` still `b893349`.
+2. **Owner: revoke the Cloudflare API token** used for setup (My Profile → API Tokens)
+   and delete `/tmp/opencode/creds.env` (still present at handoff time).
+3. **Owner confirmed the pipeline works** ("everything works great", Oct 11) — covers
+   site, bookings, and CEO emails. Optional cleanup: test rows (rows #1/#3,
+   `email='jane.tester@example.com'`), stale GitHub Pages copy.
+4. One human pass on the LIVE site: mobile (~390px) visual alignment of the new form +
+   Request Received receipt; then watch the first real booking end-to-end.
 5. LAUNCH-CHECKLIST §7 scope hint + footer nav label "Request Builder" — owner confirm.
 6. Future hardening: rate limiting/Turnstile, prune webp-candidates to the shipped file,
    remove `crimson-bar-1917`/`empty-wind-b8e3` leftover Worker scripts (owner choice).

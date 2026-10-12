@@ -31,6 +31,17 @@
     `PUT /accounts/{acct}/workers/domains`. Verified: HTTP 200.
     Reversal: remove the Workers domain + recreate the CNAME.
 
+18. **Booking notifications go to TWO CEO mailboxes via one comma-separated variable**
+    Context: owner supplied two notification addresses (tyrikn2@gmail.com,
+    diamondroyaltyny@gmail.com) when asked for the booking-notification recipient;
+    a single-address variable would have dropped one.
+    Choice: `BOOKING_NOTIFY_EMAIL` holds both, comma-separated; `sendEmail` splits it
+    into Resend's recipient array (one API call, one notification email with two
+    recipients). Adding/removing a recipient = edit the Worker var + redeploy; no code
+    change. Verification caveat: `example.com` addresses are rejected by Resend (422,
+    reserved domain) — test only with real addresses.
+    Reversal: change the var to a single address (split still works).
+
 1. **WebP default = `c1-original-q85.webp`**
    Context: 2.3 MB source must ship as WebP; 9 candidates measured (bytes, PSNR,
    halo/overshoot, banding); no model vision available for subjective pass.
