@@ -1,5 +1,29 @@
 # DECISIONS
 
+20. **Booking replies route to the requester; CEO sends as `bookings@…` (Milestone 6 —
+    APPROVED Oct 13, 2026, not yet executed)**
+    Context: the CEO notification is sent from `bookings@diamondroyaltycleaningco.com` with
+    **no `Reply-To`** (`worker.js:23–37`), so `Reply` in Gmail addresses `bookings@…` —
+    which has **no inbox** (Email Routing has one rule, `services@…` → Worker
+    `empty-wind-b8e3`; catch-all disabled) — so a reply reached nobody, and the requester's
+    address was visible only as body text. Approved plan: `R1` add Resend `reply_to` =
+    requester + an HTML part whose address is a `mailto:` link with the threaded subject
+    `Re: We received your cleaning request — Diamond Royalty Cleaning` (`worker.js` only);
+    `R2` deploy + live proof of the `Reply-To:` header; `R3` Cloudflare Email Routing rule
+    `bookings@…` → verified destination `diamondroyaltyny@gmail.com`;
+    `R4` Gmail *Send mail as* `bookings@…` via **Resend SMTP** (`smtp.resend.com`, user
+    `resend`, key = `RESEND_API_KEY`, 587/TLS) — **not** "Send through Gmail", which is
+    unsigned for the domain and fails DMARC `p=quarantine`; DKIM (`resend._domainkey`,
+    `d=diamondroyaltycleaningco.com`) is the aligned path. Budget: **$0** (Resend, Cloudflare,
+    existing Gmail only). Tradeoffs accepted: reply lands as a new non-threaded Message-ID
+    (mitigated by subject prefill), Reply-all copies the second notification address, raw
+    requester address appears in a header, HTML part must be escaped (customer-controlled
+    fields), rotating `RESEND_API_KEY` breaks the Gmail alias.
+    Reversal: per-piece, independent — `git revert` + redeploy `worker.js`; delete the Email
+    Routing rule; remove the Gmail alias. Nothing in `index.html`, the form, D1 data, or DNS
+    records changes.
+
+
 16. **Architecture pivot: Cloudflare Pages → existing Worker (`diamond-site`) serves site + API**
     Context: Milestone 1 (site live on the domain) was delivered by the owner as a
     **Cloudflare Worker with static assets** (uploaded from repo HEAD `b893349`, no script,

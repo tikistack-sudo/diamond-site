@@ -17,6 +17,11 @@ Owner-facing runbook. Every step is either:
   copy/paste prompt for a very cheap/free model. Run them **in order, one at a time**, each
   in a fresh session. After each one, run its **COMPLETION PROOF** before starting the next.
 
+> **Milestone 6 (reply routing) labels:** `[CHEAP TASK]` R1 is the same class of bounded
+> local task as T1–T7; `[AGENT]` and `[OWNER + AGENT]` steps (R2, R3, R5, R6) need a
+> capable agent with the Cloudflare token (deploy, API calls, live verification), and R4 is
+> owner-only (Gmail login). Run R1 → R6 in order, each with its COMPLETION PROOF.
+
 Repo ground truth (verified): branch `main` == `origin/main` @ `b893349`, working tree
 clean. `index.html` is a single minified line; the form is a local-only "draft builder"
 (`CSP form-action 'none'` blocks all submissions). No backend exists yet.
@@ -869,6 +874,425 @@ Run in this exact order; do not skip the D1 check:
     `DELETE FROM bookings WHERE email='jane.tester@example.com';`
 
 ✅ **Launch complete when:** steps 1–9 all pass.
+
+---
+
+## MILESTONE 6 — Reply routing: answer a booking request from the business inbox
+
+> **Approved (Oct 13, 2026) by the owner; plan reviewed and signed off.** This is a new
+> milestone added after launch — it does not change the site, the form, or the stored data.
+> **Budget: $0.** No new services, subscriptions, or accounts; every step runs on Resend,
+> Cloudflare, and the existing Gmail account.
+>
+> **Problem (verified live, Oct 13 2026).** The CEO notification is sent from
+> `bookings@diamondroyaltycleaningco.com` with **no `Reply-To`** (`worker.js:23–37`), so
+> `Reply` in Gmail addresses `bookings@…` — and `bookings@…` has **no inbox** (Email
+> Routing has exactly one rule: `services@…` → Worker `empty-wind-b8e3`; catch-all
+> disabled). A reply therefore reaches nobody and the customer never sees it.
+>
+> **Goal.** `Reply` and a clickable `mailto:` address in the notification both address the
+> requester; mail the CEO sends displays `bookings@diamondroyaltycleaningco.com`.
+
+Constants for every command below (do not print credentials):
+
+- `CF_ACCOUNT=fcb3d4d3de6851afeb4f5e0bc28ab479`
+- `CF_ZONE=39af72e23f5f4c5a412d0c87e89a0a1d`
+- Repo: `/home/webg7x/Projects/diamond-site` · creds: `~/.config/opencode/cloudflare.env`
+  (source-only, permissions 600, never printed or committed)
+- Worker: `diamond-site`; D1: `d84a3ce1-3055-4a96-8638-0e485fade614`
+
+### Verified state before starting (re-check; do not trust on faith)
+
+| Fact | Verify with |
+|---|---|
+| `sendEmail` has no `reply_to` | `grep -n "reply_to" worker.js` → no match |
+| From address | `grep -n "^const FROM" worker.js` |
+| Live bindings intact | `GET /accounts/$CF_ACCOUNT/workers/scripts/diamond-site/settings` → `DB`, `RESEND_API_KEY`, `BOOKING_NOTIFY_EMAIL` |
+| `bookings@` has no rule | `GET /zones/$CF_ZONE/email/routing/rules` → only `services@…` |
+| Destination already verified | `GET /accounts/$CF_ACCOUNT/email/routing/addresses` → `diamondroyaltyny@gmail.com` status `verified` (Oct 9) |
+| Resend SMTP params | `smtp.resend.com`, user `resend`, password = API key, port 587/STARTTLS (or 465/SSL) |
+
+---
+
+### R1 — [CHEAP TASK] `reply_to` + clickable address in the owner notification
+
+TASK CLASSIFICATION: local-reversible
+
+COPY/PASTE PROMPT:
+
+````md
+## ROLE
+You are a careful repository maintenance agent working on the Cloudflare Worker site
+`diamond-site`.
+
+## TASK
+Edit exactly one file, `worker.js`, so the booking notification sent to the CEO (a) carries
+a `Reply-To` header containing the requester's email address and (b) includes an HTML part
+where the requester's address is a `mailto:` link that opens a compose window in the same
+browser with the To field pre-filled and the subject pre-filled for threading.
+
+## ALLOWED SCOPE
+Modify exactly one file: `worker.js`. Do not touch `index.html`, `wrangler.jsonc`,
+`schema.sql`, or any document. Do not stage, commit, or push. Do not deploy.
+Do not call any Cloudflare or Resend API in this task.
+
+## REQUIRED EVIDENCE
+- `worker.js:23–37` is `async function sendEmail(env, to, subject, text)`; its fetch body is
+  `JSON.stringify({ from: FROM, to: toList, subject: subject, text: text })` — no `html`,
+  no `reply_to`.
+- `worker.js:12` `FROM = 'Diamond Royalty Cleaning <bookings@diamondroyaltycleaningco.com>'`.
+- Owner call site (~line 112): `sendEmail(env, env.BOOKING_NOTIFY_EMAIL, 'New booking
+  request — ' + rec.service + ' — ZIP ' + rec.zip, ownerText)`.
+- Customer call site (~line 117) sends subject exactly
+  `'We received your cleaning request — Diamond Royalty Cleaning'` — this MUST stay as-is
+  (no `reply_to`, no `html`).
+- `rec.name`, `rec.notes`, `rec.service` are customer-controlled and MUST be HTML-escaped
+  before insertion into HTML.
+- Resend's send API accepts `html` and `reply_to` (string) — confirmed in Resend's API
+  reference (the fields also "take precedence over the template's defaults").
+
+## STEPS
+1. `git status --short` and confirm `worker.js` is unmodified. If it is modified, STOP.
+2. Add an escape helper directly below `field()`:
+
+```js
+function esc(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+```
+
+3. Change the signature to `async function sendEmail(env, to, subject, text, opts)` and
+   build the payload:
+
+```js
+  const o = opts || {};
+  const payload = { from: FROM, to: toList, subject: subject, text: text };
+  if (o.html) payload.html = o.html;
+  if (o.replyTo) payload.reply_to = o.replyTo;
+  // …
+  body: JSON.stringify(payload),
+```
+
+4. Immediately above `const ownerText` (~line 107) add the reply subject, mailto URL and
+   HTML body:
+
+```js
+const REPLY_SUBJECT = 'Re: We received your cleaning request — Diamond Royalty Cleaning';
+const ownerMailto = 'mailto:' + rec.email + '?subject=' + encodeURIComponent(REPLY_SUBJECT);
+const ownerHtml = [
+  '<p>New booking request #' + esc(String(id)) + '</p>',
+  '<ul>',
+  '<li>Name: ' + esc(rec.name) + '</li>',
+  '<li>Email: <a href="' + esc(ownerMailto) + '">' + esc(rec.email) + '</a></li>',
+  '<li>Phone: <a href="tel:' + esc(rec.phone) + '">' + esc(rec.phone) + '</a></li>',
+  '<li>ZIP: ' + esc(rec.zip) + '</li>',
+  '<li>Service: ' + esc(rec.service) + '</li>',
+  '<li>Bedrooms: ' + esc(rec.bedrooms) + '</li>',
+  '<li>Bathrooms: ' + esc(rec.bathrooms) + '</li>',
+  '<li>Frequency: ' + esc(rec.frequency) + '</li>',
+  '<li>Preferred date: ' + esc(rec.preferred_date || 'Flexible / not specified') + '</li>',
+  '<li>Notes: ' + esc(rec.notes || 'None provided') + '</li>',
+  '</ul>',
+  '<p>Press Reply, or click the email address above, to answer the requester.</p>',
+].join('');
+```
+
+5. Append one line to the plain-text owner body (right after `ownerText` is built) so a
+   text-only reader sees the same instruction:
+
+```js
+ownerText += '\n\nReply to this email to answer ' + rec.email + ' directly.';
+```
+
+6. Update the owner call (~line 112) to pass the options; change nothing else:
+
+```js
+ownerEmailed = await sendEmail(env, env.BOOKING_NOTIFY_EMAIL, 'New booking request — ' + rec.service + ' — ZIP ' + rec.zip, ownerText, { html: ownerHtml, replyTo: rec.email });
+```
+
+7. Leave the customer call (~line 117) EXACTLY as it is.
+8. Stop.
+
+## STOP CONDITIONS
+STOP without editing if: `worker.js` is already modified; any anchor above does not match
+exactly once; `worker.js` already contains `reply_to`; or anything contradicts
+REQUIRED EVIDENCE.
+
+## VALIDATION
+Run exactly and include the outputs:
+- `cp worker.js /tmp/opencode/worker.check.mjs && node --check /tmp/opencode/worker.check.mjs`
+  → no output (pass). (`node --check` treats `.js` as CommonJS; the `.mjs` copy is the
+  documented workaround for this ESM file.)
+- `grep -c "reply_to" worker.js` → 1
+- `grep -c "mailto:" worker.js` → 1
+- `grep -c "html: ownerHtml" worker.js` → 1
+- `grep -c "replyTo: rec.email" worker.js` → 1
+- `grep -c "REPLY_SUBJECT" worker.js` → 2
+- `git diff --stat` → only `worker.js`
+- `git diff worker.js` → only the hunks described above
+
+## REQUIRED REPORT
+Report in this format:
+## STATUS
+## EVIDENCE
+## RESULT
+## FILES CHANGED
+## VALIDATION
+## HANDOFF
+Include the exact command outputs above and state that the customer email path is unchanged.
+
+## HARD PROHIBITIONS
+Do not stage, commit, push, deploy, delete, rename, or move anything. Edit no file other
+than `worker.js`. Do not print, copy, or commit secrets. Do not call any network API.
+````
+
+COMPLETION PROOF: the six greps return the counts shown; `node --check` on the `.mjs` copy
+is silent; `git diff --stat` lists only `worker.js`.
+
+ESCALATE IF: any anchor fails to match; `worker.js` was already dirty; the customer call
+site appears changed.
+
+---
+
+### R2 — [OWNER + AGENT] Deploy the Worker and prove Reply-To live
+
+TASK CLASSIFICATION: remote-write (deploy) + live verification
+
+COPY/PASTE PROMPT:
+
+````md
+## ROLE
+You are a careful deployment and verification agent for the Cloudflare Worker
+`diamond-site`.
+
+## TASK
+Deploy the current `worker.js` to the live Worker and prove from the live system that the
+notification email carries `Reply-To: <requester address>` and a clickable mailto link.
+
+## ALLOWED SCOPE
+Deploy the `diamond-site` Worker only, plus one temporary test booking that you delete
+afterwards. Do not change bindings, vars, secrets, DNS, Email Routing, the D1 schema, or
+any file other than those in R6. No git commit/push.
+
+## REQUIRED EVIDENCE
+- R1 complete and validated (`reply_to`, `mailto:`, `html: ownerHtml` present).
+- `wrangler.jsonc` (repo root) carries the `DB` binding and `BOOKING_NOTIFY_EMAIL` var;
+  `RESEND_API_KEY` is a Worker secret that persists across deploys.
+- Credentials: `~/.config/opencode/cloudflare.env` — source-only, never print.
+- Resend rejects `example.com` (422); use a real inbox. `diamondroyaltyny@gmail.com` is a
+  verified destination and is safe for the test.
+
+## STEPS
+1. `set -a; . ~/.config/opencode/cloudflare.env; set +a`
+2. From the repo root run `npx wrangler deploy`; capture the output. If wrangler is
+   unavailable or unauthenticated, STOP and hand the deploy to the owner (their own
+   `wrangler login`, or the dashboard) — do NOT attempt a hand-built REST multipart
+   deploy in this task.
+3. `GET /accounts/$CF_ACCOUNT/workers/scripts/diamond-site/settings` and assert all three
+   bindings are still present (`BOOKING_NOTIFY_EMAIL`, `DB`, `RESEND_API_KEY`).
+4. POST one test booking (replace the date with tomorrow, UTC):
+   `curl -i -X POST https://diamondroyaltycleaningco.com/api/booking -H 'Content-Type: application/json' -d '{"ack":true,"name":"Reply Test","email":"localwebsitepreview@gmail.com","phone":"212-555-0134","zip":"10001","service":"Routine cleaning","bedrooms":"2","bathrooms":"1","frequency":"One time","date":"<YYYY-MM-DD>","notes":"TEST — reply routing"}'`
+   Expect HTTP 201 and `"owner_emailed":true,"customer_emailed":true`; record the row `id`.
+5. In the notification inbox (owner action if the agent has no mailbox access): open the
+   message → ⋮ → **Show original** → assert `Reply-To: localwebsitepreview@gmail.com` is
+   present. In the rendered message, assert the email address is a link and, when clicked,
+   opens a compose window with **To already filled in** and the subject starting `Re: We
+   received your cleaning request`.
+6. Cleanup the test row via the D1 query endpoint:
+   `DELETE FROM bookings WHERE email='localwebsitepreview@gmail.com' AND name='Reply Test';`
+7. Stop.
+
+## STOP CONDITIONS
+STOP if the deploy reports an error, any binding disappears, the POST is not 201, or
+`owner_emailed` is not true. Report instead of retrying blindly.
+
+## VALIDATION
+- `curl -s -o /dev/null -w '%{http_code}' https://diamondroyaltycleaningco.com/` → 200
+- `curl -s -o /dev/null -w '%{http_code}' https://www.diamondroyaltycleaningco.com/` → 200
+- `curl -s -o /dev/null -w '%{http_code}' https://diamondroyaltycleaningco.com/api/booking` → 405
+- Guard: POST `{"ack":false}` → 400
+- "Show original" contains a `Reply-To:` header with the requester's address
+- Booking count returns to its pre-test value after cleanup
+
+## REQUIRED REPORT
+## STATUS / ## EVIDENCE / ## RESULT / ## FILES CHANGED / ## VALIDATION / ## HANDOFF
+Include the deploy tail, the bindings list, the exact 201 body, the `Reply-To:` header
+line, and the cleanup confirmation.
+
+## HARD PROHIBITIONS
+Do not modify bindings, vars, secrets, DNS, Email Routing, or the D1 schema. Do not commit
+or push. Never print or commit credentials. Do not deploy any other Worker.
+````
+
+COMPLETION PROOF: 201 with `owner_emailed:true`; `Show original` shows the `Reply-To`
+header; the in-body address opens a pre-filled compose window; bindings unchanged; test row
+deleted.
+
+ESCALATE IF: the deploy needs credentials the agent does not have; `owner_emailed` is false;
+the `Reply-To` header is absent (R1 not deployed).
+
+---
+
+### R3 — [AGENT] Give `bookings@` a receiving path (Cloudflare Email Routing)
+
+TASK CLASSIFICATION: remote-write, one reversible DNS-routing rule
+
+COPY/PASTE PROMPT:
+
+````md
+## ROLE
+You are a careful Cloudflare API agent.
+
+## TASK
+Add exactly one Email Routing rule: mail addressed to
+`bookings@diamondroyaltycleaningco.com` is forwarded to `diamondroyaltyny@gmail.com`.
+This gives the address a receiving path so (a) Gmail's alias-confirmation code in R4 can
+arrive and (b) a customer who replies directly to `bookings@…` reaches a human inbox.
+
+## ALLOWED SCOPE
+Create one Email Routing rule in zone `39af72e23f5f4c5a412d0c87e89a0a1d`. Do not modify
+the existing `services@…` rule, MX/SPF/DKIM/DMARC records, catch-all, D1, or the Worker.
+
+## REQUIRED EVIDENCE
+- `GET /zones/$CF_ZONE/email/routing/rules` currently returns exactly one enabled rule:
+  `to: services@diamondroyaltycleaningco.com` → `worker: empty-wind-b8e3`; plus one
+  disabled catch-all `all → drop`.
+- `GET /accounts/$CF_ACCOUNT/email/routing/addresses` shows `diamondroyaltyny@gmail.com`
+  with `status: verified` (no new verification needed).
+- Email Routing is enabled for the zone (`status: ready`, MX → `route*.mx.cloudflare.net`).
+
+## STEPS
+1. `set -a; . ~/.config/opencode/cloudflare.env; set +a`
+2. Re-read the rules list and record the existing rule id and its `enabled` state.
+3. Create the rule:
+   `curl -s -X POST "https://api.cloudflare.com/client/v4/zones/$CF_ZONE/email/routing/rules" -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" -d '{"enabled":true,"matchers":[{"type":"literal","field":"to","value":"bookings@diamondroyaltycleaningco.com"}],"actions":[{"type":"forward","value":["diamondroyaltyny@gmail.com"]}]}'`
+4. Capture the new rule `id` from the response.
+5. Re-read the rules list and confirm: two enabled rules; the `services@…` rule id,
+   matcher and action are byte-identical to step 2.
+6. Stop.
+
+## STOP CONDITIONS
+STOP if a rule for `bookings@…` already exists, if the destination is not `verified`, if
+the zone's Email Routing is not `ready`, or if the existing rule would be altered.
+
+## VALIDATION
+- `GET /zones/$CF_ZONE/email/routing/rules` → 2 enabled rules, exactly as described
+- The new rule's matcher is `to = bookings@diamondroyaltycleaningco.com` and its action is
+  `forward` to `diamondroyaltyny@gmail.com`
+- Existing rule unchanged (same id, same action)
+
+## REQUIRED REPORT
+## STATUS / ## EVIDENCE / ## RESULT / ## FILES CHANGED / ## VALIDATION / ## HANDOFF
+Include the before/after rules JSON and the new rule id.
+
+## HARD PROHIBITIONS
+Do not touch MX/SPF/DKIM/DMARC/TXT records, the catch-all, the Worker, D1, or any repo
+file. Do not print or commit credentials. Do not disable or reorder existing rules.
+````
+
+COMPLETION PROOF: two enabled rules; new `bookings@…` → forward destination; existing
+`services@…` rule unchanged.
+
+REVERSAL: `DELETE /zones/$CF_ZONE/email/routing/rules/<new rule id>` — no other change.
+
+---
+
+### R4 — [OWNER] Make Gmail send as `bookings@diamondroyaltycleaningco.com`
+
+Owner-only (requires the Gmail password/2FA). The agent prepares the values, then stands by.
+
+1. Sign in to the business Gmail account → gear → **See all settings**.
+2. **Accounts and Import** → **Send mail as** → **Add another email address**.
+3. Name: `Diamond Royalty Cleaning`. Email: `bookings@diamondroyaltycleaningco.com`.
+   Click **Next Step**.
+4. Choose **Send through SMTP servers** — *not* "Send through Gmail" (see below).
+   - SMTP server: `smtp.resend.com`
+   - Port: `587` (TLS) — if it fails, retry with `465` (SSL)
+   - Username: `resend`
+   - Password: the **Resend API key** (the same value held as the Worker secret
+     `RESEND_API_KEY`)
+   - Secured connection: **TLS** → **Add Account**
+5. Google emails a confirmation to `bookings@…`; it now forwards to this inbox (R3). Open
+   it and click the link / enter the code.
+6. Still in **Send mail as**, click **make default** for the business address (or select it
+   from the From dropdown when composing).
+7. If Google refuses the password: enable 2-Step Verification on the account and generate
+   an app password (Google Account → Security → App passwords), then retry with that in the
+   password field. Retry was intentionally ordered last — the Resend key normally works.
+
+Why "Send through Gmail" is forbidden: it sends from `gmail.com` unsigned for the domain,
+which fails the zone's DMARC policy (`p=quarantine`) and lands in the customer's spam.
+Sending through Resend's SMTP signs with `resend._domainkey`
+(`d=diamondroyaltycleaningco.com`) — DKIM aligned, so DMARC passes on DKIM alone. SPF alone
+does **not** align (the apex TXT only includes Cloudflare's MX).
+
+COMPLETION PROOF: the alias appears in *Send mail as* marked default/verified.
+
+---
+
+### R5 — [AGENT + OWNER] Deliverability + end-to-end proof
+
+TASK CLASSIFICATION: read-only verification (one test send)
+
+1. In Gmail compose, set From to `bookings@diamondroyaltycleaningco.com`, send to a real
+   inbox (the second business address is a good target).
+2. Assert on the received copy: sender shows `Diamond Royalty Cleaning
+   <bookings@diamondroyaltycleaningco.com>` with **no** "via gmail.com"; it is in **Inbox,
+   not Spam**.
+3. **Show original** on the received copy and assert
+   `dkim=pass header.d=diamondroyaltycleaningco.com` (DMARC aligned). SPF may be
+   fail/neutral — that is acceptable because DKIM carries the policy.
+4. Confirm the send appears in the Resend dashboard (Activity) — it consumes the free
+   100/day allowance.
+5. End-to-end: open a fresh booking notification, click the requester's address → compose
+   opens with To pre-filled and the `Re:` subject → send → confirm the message groups with
+   the customer's "We received your cleaning request" thread.
+6. Record the email ids/subjects as evidence. No files change in this task.
+
+COMPLETION PROOF: item 2 (inbox, no "via") + item 3 (`dkim=pass` with the domain) + item 5
+(thread grouping). Any failure → report; do not "fix" by switching to Send-through-Gmail.
+
+---
+
+### R6 — [AGENT] Docs closeout + rollback notes
+
+TASK CLASSIFICATION: docs-only, local-reversible
+
+1. `README.md` — in the Booking flow/config sections, note: the owner notification carries
+   `Reply-To: <customer>` and an HTML `mailto:` link; `bookings@…` now forwards to the
+   business Gmail via Cloudflare Email Routing; outgoing CEO replies are sent as
+   `bookings@…` through Resend SMTP (Gmail *Send mail as*).
+2. `DECISIONS.md` — **update #20** (created at approval time) with the executed evidence
+   and any deviation from the plan; keep Context / Choice / Reversal:
+   - Context: `Reply` addressed `bookings@…`, which had no inbox; the customer address was
+     visible only as body text.
+   - Choice: Resend `reply_to` = requester + HTML mailto with threaded `Re:` subject (R1);
+     Email Routing `bookings@` → business Gmail (R3); Gmail *Send mail as* via Resend SMTP,
+     DKIM-aligned (R4).
+   - Reversal: revert `worker.js` + redeploy; delete the Email Routing rule; remove the
+     Gmail alias.
+3. `STATE.md` — milestone line + verified facts from R2/R5; add the new open items.
+4. `TASKS.md` — mark R1–R6 with proof, or OPEN where owner-gated.
+5. `handoffs/latest.md` — rewrite per the handoff skill (milestone, verified facts,
+   blockers, next 1–3 actions, files touched, approval pending).
+6. Do not commit. Stop; the owner commits and pushes.
+
+### Rollback for Milestone 6 (each piece is independent)
+
+| Piece | Undo |
+|---|---|
+| Code | `git revert` the R1 commit → `npx wrangler deploy` |
+| Routing rule | `DELETE /zones/$CF_ZONE/email/routing/rules/<id>` (R3 output) |
+| Gmail alias | Gmail → *Send mail as* → remove `bookings@…` |
+| Nothing else | `index.html`, the form, D1 data, DNS records are untouched |
+
+✅ **Milestone 6 complete when:** R2's `Reply-To` proof, R5's `dkim=pass` + inbox proof, and
+R6's docs are all recorded, and the owner has committed + pushed.
 
 ---
 

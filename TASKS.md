@@ -121,3 +121,28 @@
   first real booking end-to-end.- [ ] OPEN — Owner confirmations still pending (unaffected by theme): consultation phone
   as Zelle recipient, payment acceptance facts, Cash App Pay product, Zelle permission,
   LAUNCH-CHECKLIST §7 scope hint, footer nav label "Request Builder".
+
+## Booking reply routing — plan approved Oct 13, 2026 (Milestone 6)
+
+- [x] DONE — Plan drafted, revised twice, and **approved by the owner** (Oct 13, 2026):
+  budget **$0**; steps = `reply_to` + clickable `mailto:` on the notification; Email
+  Routing path for `bookings@…`; Gmail *Send mail as* via Resend SMTP.
+  Proof: stated approval in session; recorded in `DECISIONS.md` #20 and `STATE.md`.
+- [x] DONE — `RUNBOOK.md` MILESTONE 6 authored (R1–R6, each with copy/paste prompt or owner
+  steps, COMPLETION PROOF, ESCALATE IF, and a per-piece rollback table).
+  Proof: `RUNBOOK.md` → *MILESTONE 6 — Reply routing*.
+- [ ] OPEN — **R1** (cheap task): `worker.js` — add `reply_to` = requester + escaped HTML
+  `mailto:` part with threaded `Re:` subject. Local-reversible, no deploy.
+- [ ] OPEN — **R2** (owner + agent): deploy the Worker (`npx wrangler deploy` or owner
+  login) and prove live `Reply-To: <requester>` + pre-filled compose link; delete the test
+  row afterwards.
+- [ ] OPEN — **R3** (agent): Cloudflare Email Routing rule
+  `bookings@diamondroyaltycleaningco.com` → `diamondroyaltyny@gmail.com` (destination
+  already verified; one reversible API call).
+- [ ] OPEN — **R4** (owner-only): Gmail *Send mail as* `bookings@…` through
+  `smtp.resend.com` (user `resend`, key = `RESEND_API_KEY`, 587/TLS); confirm the code that
+  arrives via R3; set as default From. **Not** "Send through Gmail" (DMARC).
+- [ ] OPEN — **R5** (agent + owner): deliverability proof — reply lands in Inbox (not Spam),
+  no "via gmail.com", `dkim=pass d=diamondroyaltycleaningco.com`; end-to-end thread grouping.
+- [ ] OPEN — **R6** (agent): docs closeout (README/DECISIONS #20 update/STATE/TASKS/handoff).
+- [ ] OPEN — Owner: commit + push the Milestone 6 work when executed (agent push is denied).

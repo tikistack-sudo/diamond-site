@@ -8,6 +8,29 @@ and www. Booking pipeline unchanged and re-verified after deploy (405/400 guards
 Superseded artwork sources and review artifacts archived. Remaining: owner push + token
 revocation, one mobile eyeball pass, ongoing business confirmations.
 
+> **NEW — Milestone 6 (booking reply routing) APPROVED Oct 13, 2026, NOT EXECUTED.**
+> Full step-by-step task set is in `RUNBOOK.md` → *MILESTONE 6* (R1–R6); rationale and
+> reversals in `DECISIONS.md` #20. Budget **$0**. Starting next session.
+
+## Milestone 6 — reply routing (APPROVED, not executed)
+
+- Problem (verified live Oct 13): notification sent from `bookings@…` with **no `Reply-To`**
+  (`worker.js:23–37`) ⇒ `Reply` addresses `bookings@…`, which has **no inbox** (Email
+  Routing: one rule `services@…` → Worker `empty-wind-b8e3`; catch-all disabled). The
+  requester's address exists only as body text.
+- Fix, in order: **R1** `reply_to` + escaped HTML `mailto:` part with threaded `Re:`
+  subject (repo edit, `worker.js` only) → **R2** deploy + live `Reply-To:` proof → **R3**
+  Email Routing rule `bookings@…` → `diamondroyaltyny@gmail.com` (**already verified**
+  destination, Oct 9) → **R4** Gmail *Send mail as* `bookings@…` via Resend SMTP
+  (owner-only) → **R5** deliverability proof (inbox not spam; `dkim=pass d=…`) → **R6**
+  docs/handoff.
+- Verified at approval time: Resend send API accepts `reply_to`; Resend SMTP =
+  `smtp.resend.com`, user `resend`, key = API key, 587/TLS; Email Routing `status: ready`
+  (MX `route*.mx.cloudflare.net`); DMARC `p=quarantine adkim=r aspf=r` (DKIM alignment is
+  the path — "Send through Gmail" is forbidden).
+- Do not start R1 against a dirty `worker.js`; R2's deploy needs the Cloudflare token
+  (owner's own `wrangler login` is the fallback).
+
 ## Repo / deploy (current)
 - Local `main`: `cc5c4df` (handoff) → + this apply/archive/docs commit. `origin/main`
   still at `b893349` (owner pushes).
@@ -68,3 +91,5 @@ revocation, one mobile eyeball pass, ongoing business confirmations.
 5. LAUNCH-CHECKLIST §7 scope hint + footer nav label "Request Builder" — owner confirm.
 6. Future hardening: rate limiting/Turnstile, prune webp-candidates to the shipped file,
    remove `crimson-bar-1917`/`empty-wind-b8e3` leftover Worker scripts (owner choice).
+7. **Next session: execute `RUNBOOK.md` MILESTONE 6 (R1–R6)** — reply routing fix, $0.
+   Owner-gated: R2 deploy authorization, R3 (agent API, reversible), R4 Gmail alias.

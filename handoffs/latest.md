@@ -1,59 +1,60 @@
 # Handoff — latest
 
 ## Milestone
-**LAUNCH COMPLETE (Oct 11, 2026) — owner confirmed "everything works great."**
-diamondroyaltycleaningco.com + www are live on the Cloudflare Worker `diamond-site`
-(static site + same-origin booking API). Booking form → validated → stored in D1
-`bookings` → Resend emails: CEO notification to BOTH addresses + customer
-"forwarded / under review" confirmation. Resend domain fully verified (DKIM, SPF×2,
-tracking CNAME). All launch copy in place; dev-only pages archived.
+**LAUNCH + WHITE THEME live in production (Oct 12, 2026).** Booking pipeline unchanged:
+form → `/api/booking` → D1 `bookings` → 2 Resend emails (CEO notification to both
+addresses + customer confirmation).
 
-## Verified facts (agent + owner, Oct 11)
-- Live: apex + www → HTTP 200 (www 522 fixed by attaching it as a Workers custom
-  domain; the broken CNAME was deleted — rollback in DECISIONS #17).
-- Live markers: phone field present, "Send My Request", "Request Received" receipt,
-  CSP `form-action 'self'; connect-src 'self'`, zero "draft / not sent" strings.
-- POST `/api/booking` → 201 + D1 row; invalid ZIP → 400; GET → 405; unknown path → 404;
-  assets 200 with correct types (webp 182,900 B, SVG 6,352 B).
-- D1 `bookings` (`d84a3ce1-3055-4a96-8638-0e485fade614`): table + 2 indexes verified;
-  test rows #1 and #3 stored (status "new").
-- Resend: domain verified; booking #3 → `owner_emailed: true` (both CEO addresses);
-  direct probe to a real address → 200 + email id. `example.com` → 422 (reserved
-  domain — expected, not a bug; test with real addresses only).
-- Bindings on the Worker: `DB` (d1), `RESEND_API_KEY` (secret),
-  `BOOKING_NOTIFY_EMAIL` = both CEO addresses, comma-separated (DECISIONS #18).
-- Repo: working tree clean; local `main` = `91fff40` → `63c7075` → `b893349`;
-  **`origin/main` still `b893349`** — launch commits are unpushed.
-- Deployment: REST `PUT workers/scripts/diamond-site` (used for this launch) or
-  `npx wrangler deploy` from repo root (`wrangler.jsonc`). `functions/` (Pages
-  Function variant) removed as superseded — this account has no Pages projects.
+**NEW — Milestone 6 "booking reply routing" APPROVED Oct 13, 2026, NOT EXECUTED.**
+`RUNBOOK.md` → *MILESTONE 6* (tasks R1–R6) is ready to run next session. Budget **$0**.
+Rationale/reversals: `DECISIONS.md` #20; state summary: `STATE.md`.
+
+## Verified facts (agent, Oct 13, 2026 — before execution)
+- The CEO notification is sent from `bookings@diamondroyaltycleaningco.com` with **no
+  `Reply-To`** (`worker.js:23–37` → `{from,to,subject,text}` only). `Reply` therefore
+  addresses `bookings@…`.
+- Zone `diamondroyaltycleaningco.com` Email Routing: `status: ready`; MX →
+  `route{1,2,3}.mx.cloudflare.net`; SPF `include:_spf.mx.cloudflare.net`; DKIM
+  `cf2024-1._domainkey`; DMARC `p=quarantine adkim=r aspf=r`.
+- Email Routing rules: **one enabled** — `to services@…` → Worker `empty-wind-b8e3`;
+  catch-all (`all → drop`) **disabled** ⇒ **`bookings@…` has no inbox; replies to it reach
+  nobody.**
+- Email Routing destination `diamondroyaltyny@gmail.com` is **already verified** (Oct 9) —
+  R3 needs no new verification step.
+- Live Worker `diamond-site` bindings intact: `BOOKING_NOTIFY_EMAIL`
+  (`tyrikn2@gmail.com,diamondroyaltyny@gmail.com`), `DB` (`d84a3ce1-…`), `RESEND_API_KEY`
+  (secret). `wrangler.jsonc` reproduces the deploy from the repo root.
+- Vendor-confirmed: Resend send API accepts `reply_to` (string) and `html`; Resend SMTP =
+  `smtp.resend.com`, username `resend`, password = API key, ports 585/587/2465/2587/465.
+- Usage: 5 booking rows (3 test, 2 real) ⇒ 10 emails sent — ~0.33% of the Resend free
+  3,000/month (100/day) allowance.
 
 ## Blockers / limits
-- Agent `git push` is denied by environment policy — the owner pushes.
-- Resend rejects reserved domains (`example.com`) with 422 — customer-email tests must
-  use real addresses.
-- LAUNCH-CHECKLIST §7 scope hint + footer nav label "Request Builder" still encode
-  unconfirmed business claims — owner must confirm or rewrite.
-- Setup credentials: the temporary Cloudflare API token must be revoked by the owner;
-  `/tmp/opencode/creds.env` still exists (verified at handoff time) and should be
-  deleted. No secrets are stored in the repo.
+- Agent `git push` is denied by environment policy — **the owner pushes**.
+- Agent cannot read a mailbox: R2 step 5 (`Show original` → `Reply-To:`) and all of R4/R5
+  need the owner at the business Gmail. The agent can still deploy, call the Cloudflare
+  API, POST a test booking, and read D1.
+- Deploy path if wrangler is unavailable to the agent: owner's own `wrangler login` or the
+  dashboard — do not hand-build a REST multipart deploy (see DECISIONS #16 gotcha).
+- Resend rejects reserved domains (`example.com`, 422) — test with real addresses only.
+- "Send through Gmail" (Gmail *Send mail as* without SMTP) is **forbidden** here: unsigned
+  for the domain ⇒ fails DMARC `p=quarantine`.
 
 ## Next actions (1–3)
-1. Owner: `git push origin main` (publishes launch commits `63c7075` + `91fff40`).
-2. Owner: revoke the Cloudflare API token + delete `/tmp/opencode/creds.env`; optionally
-   delete test rows (`email='jane.tester@example.com'`) and disable the stale GitHub
-   Pages copy.
-3. One human pass on the live site (mobile ~390px: new form + Request Received receipt),
-   then watch the first real booking end-to-end.
+1. Run `RUNBOOK.md` MILESTONE 6 in order: **R1** (`worker.js`: `reply_to` + HTML `mailto:`)
+   → **R2** (deploy + live `Reply-To:` proof).
+2. **R3** (agent: Email Routing rule `bookings@…` → business Gmail) then **R4** (owner:
+   Gmail *Send mail as* via Resend SMTP) → **R5** (deliverability proof).
+3. **R6** docs closeout; owner commits + pushes.
 
 ## Files touched (this closeout)
-- `TASKS.md` (stale OPENs closed with proof; new OPENs split by owner)
-- `DECISIONS.md` (#18 dual CEO recipients; #16–17 pivot + www fix already present)
-- `handoffs/latest.md` (this file)
-- No site files touched in this closeout.
+- `RUNBOOK.md` — new *MILESTONE 6 — Reply routing* (R1–R6) + header label note.
+- `DECISIONS.md` — #20 (approved plan, context/choice/reversal).
+- `STATE.md`, `TASKS.md` — Milestone 6 recorded as approved/open.
+- No site files touched; `worker.js` unchanged (R1 not executed).
 
 ## Approval pending
-- Owner push of `63c7075` + `91fff40`.
-- Owner revocation of the setup token + deletion of `/tmp/opencode/creds.env`.
-- Owner confirmations: §7 scope hint, "Request Builder" nav label, payment/Zelle facts
-  (unaffected by launch).
+- Owner: commit + push this docs/runbook closeout.
+- Owner: authorization for the R2 deploy and the R4 Gmail alias setup (next session).
+- Still open from launch: token revocation for `~/.config/opencode/*.env`, test-row
+  cleanup, mobile eyeball pass, LAUNCH-CHECKLIST §7 wording, footer nav label.
