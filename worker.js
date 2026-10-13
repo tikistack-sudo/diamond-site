@@ -137,7 +137,7 @@ export default {
     if (url.pathname === '/Apple_Pay_Mark_RGB_041619.svg') {
       return new Response(applePayMark, { headers: { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'public, max-age=86400' } });
     }
-    if (url.pathname === '/webp-candidates/c1-original-q85.webp') {
+    if (url.pathname === '/webp-candidates/c1-airbnb-q82.webp') {
       return new Response(heroImage, { headers: { 'Content-Type': 'image/webp', 'Cache-Control': 'public, max-age=86400' } });
     }
     return new Response('Not found', { status: 404, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });

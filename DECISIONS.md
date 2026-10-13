@@ -58,10 +58,14 @@
     `archive/__view-white-airbnb-compare.html`. Root now: `index.html`, `worker.js`,
     `wrangler.jsonc`, `webp-candidates/c1-airbnb-q82.webp` only.
     Reversal: revert the commit (archived originals live in `archive/webp-candidates/`).
-    DEPLOY PENDING: the Worker redeploy requires the owner (`npx wrangler deploy` after
-    `wrangler login`, or a fresh short-lived API token in `/tmp/opencode/creds.env`) —
-    the setup token + creds file were already deleted/revoked after Milestone 3. Until
-    redeploy, production still serves the previous dark theme + old artwork.
+    DEPLOY: completed via REST (Oct 12) using the owner-supplied tokens in
+    `~/.config/opencode/{cloudflare,resend}.env` (handling contract: source-only,
+    never printed/committed; perms tightened to 600). Live verification: new webp 200
+    (171,804 B) at `/webp-candidates/c1-airbnb-q82.webp`, old webp path 404, index/SVG
+    200, guards 400/405, www 200; screenshot confirms white canvas + AIRBNB artwork.
+    Deploy bug caught by live verification: the route check still matched the old webp
+    path (import updated, route not) — old URL served new bytes, new URL 404; fixed in
+    the same session and redeployed.
 
 1. **WebP default = `c1-original-q85.webp`**
    Context: 2.3 MB source must ship as WebP; 9 candidates measured (bytes, PSNR,

@@ -108,12 +108,16 @@
   `mv`); local preview server (PID 6352) closed, port 8788 verified closed.
   Proof: DECISIONS #19; root = index.html/worker.js/wrangler.jsonc +
   webp-candidates/c1-airbnb-q82.webp only.
-- [ ] OPEN — Owner: deploy the theme — `npx wrangler deploy` (after `wrangler login`) OR
-  drop a fresh short-lived Cloudflare token in `/tmp/opencode/creds.env` and ask the
-  agent. Until then production serves the previous dark theme + old artwork.
+- [x] DONE — PRODUCTION DEPLOY of the white theme (agent, REST, owner-supplied tokens
+  from `~/.config/opencode/*.env`, handled under the source-only contract, perms 600).
+  Deploy bug (route still on old webp path) caught in live verification and fixed +
+  redeployed same session. Proof: live — new webp 200 (171,804 B) at
+  `/webp-candidates/c1-airbnb-q82.webp`, old webp path 404, index white theme served,
+  guards 400/405, www 200, screenshot confirms AIRBNB artwork + white canvas.
 - [ ] OPEN — Owner: `git push origin main` (all launch + theme commits are local).
-- [ ] OPEN — One human pass on the LIVE site after redeploy (mobile ~390px visual),
-  then watch the first real booking end-to-end.
-- [ ] OPEN — Owner confirmations still pending (unaffected by theme): consultation phone
+- [ ] OPEN — Owner: revoke the tokens in `~/.config/opencode/*.env` when no longer
+  needed (deploy complete).
+- [ ] OPEN — One human pass on the LIVE site (mobile ~390px visual), then watch the
+  first real booking end-to-end.- [ ] OPEN — Owner confirmations still pending (unaffected by theme): consultation phone
   as Zelle recipient, payment acceptance facts, Cash App Pay product, Zelle permission,
   LAUNCH-CHECKLIST §7 scope hint, footer nav label "Request Builder".

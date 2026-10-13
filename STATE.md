@@ -1,16 +1,12 @@
 # STATE — diamond-site
 
 ## Milestone
-**LAUNCH COMPLETE + white theme applied locally (Oct 12, 2026).** The booking pipeline is
-live and owner-confirmed. The human-approved white theme + new Airbnb artwork are now
-applied to `index.html` (byte-identical to the approved prototype), `worker.js` imports
-the new artwork, and all superseded images + review artifacts are archived. **The
-production Worker has NOT been redeployed** — the setup API token and
-`/tmp/opencode/creds.env` were deleted after Milestone 3, so the owner must deploy
-(`npx wrangler deploy` from the repo root after `wrangler login`, or drop a fresh
-short-lived token in `/tmp/opencode/creds.env` and ask the agent). Production still
-serves the previous dark theme until that deploy. Owner push of 4 local commits is also
-pending.
+**LAUNCH + WHITE THEME COMPLETE (Oct 12, 2026) — production verified.** The Worker
+`diamond-site` serves the white-theme homepage with the new "AIRBNB RESIDENTIAL AND
+COMMERCIAL CLEANING" artwork (`c1-airbnb-q82.webp`, 171,804 B, 1080×1350) at both apex
+and www. Booking pipeline unchanged and re-verified after deploy (405/400 guards).
+Superseded artwork sources and review artifacts archived. Remaining: owner push + token
+revocation, one mobile eyeball pass, ongoing business confirmations.
 
 ## Repo / deploy (current)
 - Local `main`: `cc5c4df` (handoff) → + this apply/archive/docs commit. `origin/main`
