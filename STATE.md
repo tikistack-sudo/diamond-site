@@ -1,15 +1,25 @@
 # STATE — diamond-site
 
 ## Milestone
-**LAUNCH ESSENTIALLY COMPLETE (Oct 11 2026).** The site is live at
-https://diamondroyaltycleaningco.com AND www (HTTP 200; the old 522 is fixed). The
-booking form posts to the same origin: the `diamond-site` **Worker** validates, stores
-each request in D1 `bookings`, and emails both CEO addresses (tyrikn2@gmail.com,
-diamondroyaltyny@gmail.com) plus a customer "received/under review" email — via Resend.
-Verified live by the agent: POST → 201 + D1 row #1; invalid ZIP → 400. Remaining:
-owner inbox check of the two test emails (or a fresh test after Resend verification
-completes), owner commit + push (agent push denied by policy), and revoking the
-temporary Cloudflare API token used for setup.
+**LAUNCH COMPLETE + white theme applied locally (Oct 12, 2026).** The booking pipeline is
+live and owner-confirmed. The human-approved white theme + new Airbnb artwork are now
+applied to `index.html` (byte-identical to the approved prototype), `worker.js` imports
+the new artwork, and all superseded images + review artifacts are archived. **The
+production Worker has NOT been redeployed** — the setup API token and
+`/tmp/opencode/creds.env` were deleted after Milestone 3, so the owner must deploy
+(`npx wrangler deploy` from the repo root after `wrangler login`, or drop a fresh
+short-lived token in `/tmp/opencode/creds.env` and ask the agent). Production still
+serves the previous dark theme until that deploy. Owner push of 4 local commits is also
+pending.
+
+## Repo / deploy (current)
+- Local `main`: `cc5c4df` (handoff) → + this apply/archive/docs commit. `origin/main`
+  still at `b893349` (owner pushes).
+- Root is now minimal: `index.html` (white theme, artwork `c1-airbnb-q82.webp`), 
+  `worker.js` (imports index.html + Apple Pay SVG + new webp), `wrangler.jsonc`,
+  `schema.sql`, docs. `webp-candidates/` holds only the shipped artwork.
+- Deploy: `npx wrangler deploy` (needs owner auth) or agent REST deploy with a fresh
+  token. Custom domains persist across deploys.
 
 ## Architecture (PIVOTED — see DECISIONS #16–17)
 - NOT Cloudflare Pages (this account has none). The site is the `diamond-site`

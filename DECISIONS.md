@@ -42,6 +42,27 @@
     reserved domain) — test only with real addresses.
     Reversal: change the var to a single address (split still works).
 
+19. **White theme + Airbnb artwork applied to `index.html`; review artifacts archived**
+    Context: CEO asked for a white website background preserving the purple/silver
+    brand, and a newly generated artwork ("AIRBNB RESIDENTIAL AND COMMERCIAL CLEANING"
+    replacing "NYC…") converted to WebP. An approved side-by-side prototype was built
+    (31 anchored color/meta/img edits + one new placeholder rule; contrast 5.46–17.17:1,
+    all WCAG-pass; hotspots/JS/console verified in-browser; index.html hash-guarded
+    during prototyping).
+    Choice: `index.html` made byte-identical to the approved prototype
+    (sha256 3d3bd09c25ad60a4…); `worker.js` hero import switched to
+    `webp-candidates/c1-airbnb-q82.webp` (1080×1350, 171,804 B = −6.1% vs prior artwork,
+    PSNR 39.79 dB, OCR-legible). Archived (superseded/no longer needed at root):
+    `archive/webp-candidates/{c1-original-q85.jpg,c1-original-q85.webp,generated-image.png}`,
+    `archive/diamond-royalty-white-airbnb-prototype.html`,
+    `archive/__view-white-airbnb-compare.html`. Root now: `index.html`, `worker.js`,
+    `wrangler.jsonc`, `webp-candidates/c1-airbnb-q82.webp` only.
+    Reversal: revert the commit (archived originals live in `archive/webp-candidates/`).
+    DEPLOY PENDING: the Worker redeploy requires the owner (`npx wrangler deploy` after
+    `wrangler login`, or a fresh short-lived API token in `/tmp/opencode/creds.env`) —
+    the setup token + creds file were already deleted/revoked after Milestone 3. Until
+    redeploy, production still serves the previous dark theme + old artwork.
+
 1. **WebP default = `c1-original-q85.webp`**
    Context: 2.3 MB source must ship as WebP; 9 candidates measured (bytes, PSNR,
    halo/overshoot, banding); no model vision available for subjective pass.

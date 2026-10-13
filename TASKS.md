@@ -100,4 +100,20 @@
 - [x] DONE — Resend domain verified (all 4 records); final E2E proof: booking #3 →
   `owner_emailed: true`; real-address probe → 200 + email id. Owner confirmed the
   pipeline works. Proof: RUNBOOK Milestone 5 status box; STATE.md evidence block.
-- [x] DONE — Docs closeout via handoff skill (this update).
+- [x] DONE — Docs closeout via handoff skill (Oct 11 closeout).
+- [x] DONE — APPLY-LIST (human approved Oct 12): white theme + Airbnb artwork applied to
+  `index.html` (byte-identical to approved prototype, sha256 3d3bd09c…; pre-task hash
+  verified before apply); `worker.js` hero import → `c1-airbnb-q82.webp` (node --check
+  pass); superseded images + review prototypes archived (2 tracked `git mv` + 3 untracked
+  `mv`); local preview server (PID 6352) closed, port 8788 verified closed.
+  Proof: DECISIONS #19; root = index.html/worker.js/wrangler.jsonc +
+  webp-candidates/c1-airbnb-q82.webp only.
+- [ ] OPEN — Owner: deploy the theme — `npx wrangler deploy` (after `wrangler login`) OR
+  drop a fresh short-lived Cloudflare token in `/tmp/opencode/creds.env` and ask the
+  agent. Until then production serves the previous dark theme + old artwork.
+- [ ] OPEN — Owner: `git push origin main` (all launch + theme commits are local).
+- [ ] OPEN — One human pass on the LIVE site after redeploy (mobile ~390px visual),
+  then watch the first real booking end-to-end.
+- [ ] OPEN — Owner confirmations still pending (unaffected by theme): consultation phone
+  as Zelle recipient, payment acceptance facts, Cash App Pay product, Zelle permission,
+  LAUNCH-CHECKLIST §7 scope hint, footer nav label "Request Builder".

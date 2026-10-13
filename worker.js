@@ -6,7 +6,7 @@
 
 import html from './index.html';
 import applePayMark from './Apple_Pay_Mark_RGB_041619.svg';
-import heroImage from './webp-candidates/c1-original-q85.webp';
+import heroImage from './webp-candidates/c1-airbnb-q82.webp';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json; charset=utf-8' };
 const FROM = 'Diamond Royalty Cleaning <bookings@diamondroyaltycleaningco.com>';
